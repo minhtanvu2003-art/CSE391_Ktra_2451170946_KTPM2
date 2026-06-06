@@ -1,155 +1,221 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Task List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<input
-    type="text"
-    id="task"
-    class="form-control"
-    placeholder="Nhập tên Task">
-
-<button
-    class="btn btn-secondary mt-3"
-    onclick="validateTask()">
-    Add
-</button>
     <style>
-        .task-box{
-            border:1px solid #0d6efd;
-            padding:20px;
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        .task-card{
-            background:#d81fad;
-            border-radius:15px;
-            padding:15px;
-            margin-bottom:15px;
+        .card-task {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-
-        .high{color:red;font-weight:bold;}
-        .medium{color:orange;font-weight:bold;}
-        .low{color:green;font-weight:bold;}
+        .btn-add-task {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+        }
+        .btn-add-task:hover {
+            background-color: #59359a;
+            color: white;
+        }
+        .badge-high { background-color: #dc3545; color: white; }
+        .badge-medium { background-color: #ffc107; color: #212529; }
+        .badge-low { background-color: #198754; color: white; }
     </style>
 </head>
-<script>
-function validateTask() {
-
-    let task =
-        document.getElementById("task")
-        .value
-        .trim();
-
-    // Kiểm tra rỗng
-    if(task === ""){
-        alert("Vui lòng nhập tên Task");
-        return false;
-    }
-
-    // Kiểm tra > 100 ký tự
-    if(task.length > 100){
-        alert("Tên Task không được quá 100 ký tự");
-        return false;
-    }
-
-    alert("Dữ liệu hợp lệ");
-    return true;
-}
-</script>   
 <body>
 
-<div class="container mt-4">
+    <div id="root"></div>
 
-    <div class="task-box">
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-        <div class="d-flex justify-content-between mb-4">
-            <h2>Task List</h2>
-            <button class="btn btn-primary">
-                + Add Task
-            </button>
-        </div>
+        function TaskApp() {
+            // Câu 3: Khởi tạo State chứa danh sách Task. 
+            // Ở đây gán sẵn dữ liệu từ file data.json (đã được copy vào code để chạy độc lập không cần server)
+            const [tasks, setTasks] = useState([
+                { "id": 1, "title": "Học bài Nền tảng phát triển Web", "priority": "High", "status": "In Progress" },
+                { "id": 2, "title": "Làm bài tập lớn nhóm môn Lập trình Web", "priority": "Medium", "status": "To do" },
+                { "id": 3, "title": "Đọc tài liệu hướng dẫn ReactJS cơ bản", "priority": "Low", "status": "Done" },
+                { "id": 4, "title": "Chuẩn bị slide thuyết trình cho tuần sau", "priority": "Medium", "status": "To do" },
+                { "id": 5, "title": "Luyện tập gõ code HTML/CSS và Bootstrap", "priority": "High", "status": "To do" }
+            ]);
 
-        <div class="task-card row align-items-center">
-            <div class="col">Go to gym</div>
-            <div class="col high">High</div>
-            <div class="col">
-                <span class="badge bg-secondary">To Do</span>
-            </div>
-            <div class="col"><input type="radio"></div>
-            <div class="col">✏️</div>
-            <div class="col">🗑️</div>
-        </div>
+            // Các state quản lý dữ liệu form nhập vào
+            const [taskTitle, setTaskTitle] = useState('');
+            const [priority, setPriority] = useState('High');
+            
+            // Câu 2: State quản lý lỗi hiển thị (Validation Error)
+            const [error, setError] = useState('');
 
-        <div class="task-card row align-items-center">
-            <div class="col">Read a book</div>
-            <div class="col low">Low</div>
-            <div class="col">
-                <span class="badge bg-success">Done</span>
-            </div>
-            <div class="col"><input type="radio" checked></div>
-            <div class="col">✏️</div>
-            <div class="col">🗑️</div>
-        </div>
+            // Câu 3: Hàm xử lý thêm mới một Task
+            const handleAddTask = (e) => {
+                e.preventDefault();
 
-        <div class="task-card row align-items-center">
-            <div class="col">Go to market</div>
-            <div class="col medium">Medium</div>
-            <div class="col">
-                <span class="badge bg-warning text-dark">
-                    In Progress
-                </span>
-            </div>
-            <div class="col"><input type="radio"></div>
-            <div class="col">✏️</div>
-            <div class="col">🗑️</div>
-        </div>
+                // Câu 2: Kiểm tra ràng buộc dữ liệu không quá 100 ký tự
+                if (taskTitle.trim() === '') {
+                    setError('Tên công việc không được để trống!');
+                    return;
+                }
+                if (taskTitle.length > 100) {
+                    setError('Tên công việc không được vượt quá 100 ký tự! (Hiện tại: ' + taskTitle.length + ' ký tự)');
+                    return;
+                }
 
-    </div>
+                // Nếu hợp lệ, tiến hành thêm mới vào mảng dữ liệu (Cập nhật State)
+                const newTask = {
+                    id: Date.now(), // tạo id ngẫu nhiên bằng timestamp
+                    title: taskTitle,
+                    priority: priority,
+                    status: 'To do'
+                };
 
-    <div class="task-box mt-4">
-        <h5>Add Task</h5>
+                setTasks([...tasks, newTask]);
 
-        <label class="form-label">Task</label>
-        <input type="text" class="form-control mb-3">
+                // Xóa trống form sau khi thêm thành công và ẩn Modal
+                setTaskTitle('');
+                setPriority('High');
+                setError('');
 
-        <label class="form-label">Priority</label>
-        <br>
+                // Tắt modal bằng cách gọi API Bootstrap
+                const modalElement = document.getElementById('addTaskModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
+            };
 
-        <button class="btn btn-outline-danger btn-sm">High</button>
-        <button class="btn btn-outline-warning btn-sm">Medium</button>
-        <button class="btn btn-outline-success btn-sm">Low</button>
+            // Hàm trả về class màu sắc badge tương ứng với mức độ ưu tiên
+            const getPriorityClass = (p) => {
+                if (p === 'High') return 'badge-high';
+                if (p === 'Medium') return 'badge-medium';
+                return 'badge-low';
+            };
 
-        <div class="text-end mt-4">
-            <button class="btn btn-secondary">Add</button>
-        </div>
-    </div>
+            return (
+                <div class="container my-5" style={{ maxWidth: '800px' }}>
+                    
+                    {/* --- CÂU 1: Giao diện chính Danh sách công việc --- */}
+                    <div class="card card-task p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="fw-bold m-0" style={{ color: '#333' }}>Task List</h2>
+                            <button class="btn btn-add-task px-4 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                                <i class="fa-solid fa-plus me-2"></i>Add Task
+                            </button>
+                        </div>
 
-</div>
-<script>
-function validateTask() {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style={{ width: '50%' }}>Task</th>
+                                        <th scope="col">Priority</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col" class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Câu 3: Tự động lặp (render) danh sách từ state ra màn hình */}
+                                    {tasks.map(task => (
+                                        <tr key={task.id}>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input me-3" type="checkbox" checked={task.status === 'Done'} readOnly />
+                                                    <span style={{ textDecoration: task.status === 'Done' ? 'line-through' : 'none', color: task.status === 'Done' ? '#888' : '#333' }}>
+                                                        {task.title}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class={`badge px-3 py-2 rounded-pill ${getPriorityClass(task.priority)}`}>
+                                                    {task.priority}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary fw-semibold small">{task.status}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-link text-secondary p-1 me-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                <button class="btn btn-link text-danger p-1"><i class="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    let task =
-        document.getElementById("task")
-        .value
-        .trim();
+                    {/* --- CÂU 1 & CÂU 2: Giao diện Form ẩn/hiện Modal thêm mới Task --- */}
+                    <div class="modal fade" id="addTaskModal" tabIndex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content" style={{ borderRadius: '12px' }}>
+                                <div class="modal-header border-0">
+                                    <h5 class="modal-title fw-bold" id="addTaskModalLabel">Add Task</h5>
+                                    <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form onSubmit={handleAddTask}>
+                                        <div class="mb-4">
+                                            <label class="form-label text-secondary small fw-bold">Task</label>
+                                            <input 
+                                                type="text" 
+                                                class={`form-control ${error ? 'is-invalid' : ''}`} 
+                                                placeholder="Type your task here..." 
+                                                value={taskTitle}
+                                                onChange={(e) => setTaskTitle(e.target.value)}
+                                            />
+                                            {/* Câu 2: Hiển thị dòng thông báo lỗi màu đỏ nếu vi phạm ràng buộc ký tự */}
+                                            {error && <div class="invalid-feedback fw-semibold mt-2">{error}</div>}
+                                        </div>
 
-    // Kiểm tra rỗng
-    if(task === ""){
-        alert("Vui lòng nhập tên Task");
-        return false;
-    }
+                                        <div class="mb-4">
+                                            <label class="form-label text-secondary small fw-bold d-block">Priority</label>
+                                            <div class="btn-group w-100" role="group">
+                                                <button 
+                                                    type="button" 
+                                                    class={`btn ${priority === 'High' ? 'btn-danger' : 'btn-outline-danger'}`}
+                                                    onClick={() => setPriority('High')}
+                                                >High</button>
+                                                <button 
+                                                    type="button" 
+                                                    class={`btn ${priority === 'Medium' ? 'btn-warning text-dark' : 'btn-outline-warning text-dark'}`}
+                                                    onClick={() => setPriority('Medium')}
+                                                >Medium</button>
+                                                <button 
+                                                    type="button" 
+                                                    class={`btn ${priority === 'Low' ? 'btn-success' : 'btn-outline-success'}`}
+                                                    onClick={() => setPriority('Low')}
+                                                >Low</button>
+                                            </div>
+                                        </div>
 
-    // Kiểm tra > 100 ký tự
-    if(task.length > 100){
-        alert("Tên Task không được quá 100 ký tự");
-        return false;
-    }
+                                        <div class="d-flex justify-content-end mt-4">
+                                            <button type="submit" class="btn btn-add-task px-4 fw-semibold">Add</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    alert("Dữ liệu hợp lệ");
-    return true;
-}
-</script>
+                </div>
+            );
+        }
+
+        // Render ứng dụng React vào thẻ div#root
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<TaskApp />);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
